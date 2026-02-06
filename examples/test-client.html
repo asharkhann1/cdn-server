@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDN Upload & Test Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group {
+            margin: 15px 0;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .result-item code {
+            background: #e8ebff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .result-item a {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .result-item a:hover {
+            text-decoration: underline;
+        }
+
+        .test-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .test-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .test-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-entry.error {
+            color: #ff4444;
+        }
+
+        .log-entry.success {
+            color: #00ff00;
+        }
+
+        .log-entry.info {
+            color: #4444ff;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🚀 CDN Content Delivery System</h1>
+
+        <div class="card">
+            <h2>📤 Upload Files</h2>
+            <div class="upload-area" id="uploadArea">
+                <p style="font-size: 3rem; margin-bottom: 10px;">📁</p>
+                <p style="font-size: 1.2rem; color: #667eea; font-weight: 600;">Click or drag files here to upload</p>
+                <p style="color: #999; margin-top: 10px;">Supports single and multiple file uploads</p>
+            </div>
+            <input type="file" id="fileInput" multiple>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="isPublic" checked>
+                    <span>Make files public (uncheck for private/signed URLs)</span>
+                </label>
+            </div>
+
+            <button class="btn" id="uploadBtn" disabled>Upload Files</button>
+
+            <div class="results" id="uploadResults"></div>
+        </div>
+
+        <div class="card">
+            <h2>🧪 Test CDN Features</h2>
+            <div class="test-section">
+                <button class="test-btn" onclick="testCacheHit()">Test Cache Hit/Miss</button>
+                <button class="test-btn" onclick="testConditionalRequest()">Test 304 Not Modified</button>
+                <button class="test-btn" onclick="testRangeRequest()">Test Range Request</button>
+                <button class="test-btn" onclick="testCompression()">Test Compression</button>
+                <button class="test-btn" onclick="getCacheStats()">Get Cache Stats</button>
+                <button class="test-btn" onclick="getStorageStats()">Get Storage Stats</button>
+            </div>
+
+            <div class="log" id="testLog"></div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Statistics</h2>
+            <div class="stats" id="statsContainer">
+                <div class="stat-card">
+                    <h3 id="totalFiles">-</h3>
+                    <p>Total Files</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="cacheSize">-</h3>
+                    <p>Cache Size</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalSize">-</h3>
+                    <p>Total Storage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ORIGIN_URL = 'http://localhost:4000';
+        const EDGE_URL = 'http://localhost:4001';
+
+        let selectedFiles = [];
+        let lastUploadedFile = null;
+
+        // Upload area interactions
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadResults = document.getElementById('uploadResults');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect();
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', uploadFiles);
+
+        function handleFileSelect() {
+            selectedFiles = Array.from(fileInput.files);
+            if (selectedFiles.length > 0) {
+                uploadBtn.disabled = false;
+                uploadArea.innerHTML = `
+                    <p style="font-size: 2rem; margin-bottom: 10px;">✅</p>
+                    <p style="font-size: 1.2rem; color: #667eea; font-weight: 600;">
+                        ${selectedFiles.length} file(s) selected
+                    </p>
+                    <p style="color: #999; margin-top: 10px;">
+                        ${selectedFiles.map(f => f.name).join(', ')}
+                    </p>
+                `;
+            }
+        }
+
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            uploadResults.innerHTML = '';
+
+            const isPublic = document.getElementById('isPublic').checked;
+
+            for (const file of selectedFiles) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('isPublic', isPublic);
+
+                try {
+                    const response = await fetch(`${ORIGIN_URL}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        lastUploadedFile = result.file;
+                        displayUploadResult(result.file);
+                    } else {
+                        displayError(result.error);
+                    }
+                } catch (error) {
+                    displayError(error.message);
+                }
+            }
+
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Files';
+            selectedFiles = [];
+            fileInput.value = '';
+            uploadArea.innerHTML = `
+                <p style="font-size: 3rem; margin-bottom: 10px;">📁</p>
+                <p style="font-size: 1.2rem; color: #667eea; font-weight: 600;">Click or drag files here to upload</p>
+                <p style="color: #999; margin-top: 10px;">Supports single and multiple file uploads</p>
+            `;
+
+            // Refresh stats
+            getStorageStats();
+        }
+
+        function displayUploadResult(file) {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+
+            const cdnUrl = file.publicUrl ? `${EDGE_URL}${file.publicUrl}` : `${EDGE_URL}${file.signedUrl}`;
+
+            div.innerHTML = `
+                <h3>✅ ${file.originalFilename}</h3>
+                <p><strong>File ID:</strong> <code>${file.id}</code></p>
+                <p><strong>Size:</strong> ${formatBytes(file.size)}</p>
+                <p><strong>Type:</strong> ${file.mimeType}</p>
+                <p><strong>Access:</strong> ${file.isPublic ? 'Public' : 'Private (Signed URL)'}</p>
+                <p><strong>CDN URL:</strong> <a href="${cdnUrl}" target="_blank">${cdnUrl}</a></p>
+            `;
+
+            uploadResults.appendChild(div);
+        }
+
+        function displayError(message) {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.style.borderLeftColor = '#ff4444';
+            div.innerHTML = `<h3>❌ Error</h3><p>${message}</p>`;
+            uploadResults.appendChild(div);
+        }
+
+        // Test functions
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function testCacheHit() {
+            if (!lastUploadedFile) {
+                log('Please upload a file first!', 'error');
+                return;
+            }
+
+            const url = `${EDGE_URL}${lastUploadedFile.publicUrl || lastUploadedFile.signedUrl}`;
+
+            log('Testing cache miss (first request)...', 'info');
+            const start1 = performance.now();
+            const response1 = await fetch(url);
+            const time1 = (performance.now() - start1).toFixed(2);
+            const cacheStatus1 = response1.headers.get('X-Cache') || 'MISS';
+            log(`First request: ${time1}ms - Cache: ${cacheStatus1}`, 'success');
+
+            log('Testing cache hit (second request)...', 'info');
+            const start2 = performance.now();
+            const response2 = await fetch(url);
+            const time2 = (performance.now() - start2).toFixed(2);
+            const cacheStatus2 = response2.headers.get('X-Cache') || 'HIT';
+            log(`Second request: ${time2}ms - Cache: ${cacheStatus2}`, 'success');
+
+            const speedup = (time1 / time2).toFixed(2);
+            log(`Cache speedup: ${speedup}x faster!`, 'success');
+        }
+
+        async function testConditionalRequest() {
+            if (!lastUploadedFile) {
+                log('Please upload a file first!', 'error');
+                return;
+            }
+
+            const url = `${EDGE_URL}${lastUploadedFile.publicUrl || lastUploadedFile.signedUrl}`;
+
+            log('Fetching file to get ETag...', 'info');
+            const response1 = await fetch(url);
+            const etag = response1.headers.get('ETag');
+            log(`ETag: ${etag}`, 'info');
+
+            log('Sending conditional request with If-None-Match...', 'info');
+            const response2 = await fetch(url, {
+                headers: { 'If-None-Match': etag }
+            });
+
+            if (response2.status === 304) {
+                log('✅ Got 304 Not Modified - Conditional request working!', 'success');
+            } else {
+                log(`❌ Expected 304, got ${response2.status}`, 'error');
+            }
+        }
+
+        async function testRangeRequest() {
+            if (!lastUploadedFile) {
+                log('Please upload a file first!', 'error');
+                return;
+            }
+
+            const url = `${EDGE_URL}${lastUploadedFile.publicUrl || lastUploadedFile.signedUrl}`;
+
+            log('Requesting first 1024 bytes...', 'info');
+            const response = await fetch(url, {
+                headers: { 'Range': 'bytes=0-1023' }
+            });
+
+            if (response.status === 206) {
+                const contentRange = response.headers.get('Content-Range');
+                log(`✅ Got 206 Partial Content`, 'success');
+                log(`Content-Range: ${contentRange}`, 'info');
+            } else {
+                log(`❌ Expected 206, got ${response.status}`, 'error');
+            }
+        }
+
+        async function testCompression() {
+            if (!lastUploadedFile) {
+                log('Please upload a file first!', 'error');
+                return;
+            }
+
+            const url = `${EDGE_URL}${lastUploadedFile.publicUrl || lastUploadedFile.signedUrl}`;
+
+            log('Testing compression support...', 'info');
+            const response = await fetch(url, {
+                headers: { 'Accept-Encoding': 'gzip, deflate, br' }
+            });
+
+            const encoding = response.headers.get('Content-Encoding');
+            if (encoding) {
+                log(`✅ Compression active: ${encoding}`, 'success');
+            } else {
+                log('ℹ️ No compression (file may not be compressible)', 'info');
+            }
+        }
+
+        async function getCacheStats() {
+            log('Fetching cache statistics...', 'info');
+            try {
+                const response = await fetch(`${EDGE_URL}/api/cache-stats`);
+                const data = await response.json();
+                log(`Cache enabled: ${data.stats.enabled}`, 'info');
+                if (data.stats.enabled) {
+                    log(`Cache size: ${data.stats.size}/${data.stats.maxSize}`, 'success');
+                    log(`TTL: ${data.stats.ttl}ms`, 'info');
+                    document.getElementById('cacheSize').textContent = data.stats.size;
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getStorageStats() {
+            log('Fetching storage statistics...', 'info');
+            try {
+                const response = await fetch(`${ORIGIN_URL}/api/admin/stats`);
+                const data = await response.json();
+                log(`Total files: ${data.stats.totalFiles}`, 'success');
+                log(`Total size: ${data.stats.totalSizeFormatted}`, 'success');
+                log(`Public: ${data.stats.publicFiles}, Private: ${data.stats.privateFiles}`, 'info');
+
+                document.getElementById('totalFiles').textContent = data.stats.totalFiles;
+                document.getElementById('totalSize').textContent = data.stats.totalSizeFormatted;
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Load initial stats
+        getStorageStats();
+        getCacheStats();
+    </script>
+</body>
+
+</html>

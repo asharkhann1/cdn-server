@@ -1,0 +1,43 @@
+{
+  "name": "cdn-content-delivery-system",
+  "version": "1.0.0",
+  "description": "A CDN-style content delivery system with origin server and edge caching",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start:origin": "node src/origin/server.js",
+    "start:edge": "node src/edge/server.js",
+    "start:all": "concurrently \"npm run start:origin\" \"npm run start:edge\"",
+    "dev:origin": "nodemon src/origin/server.js",
+    "dev:edge": "nodemon src/edge/server.js",
+    "dev:all": "concurrently \"npm run dev:origin\" \"npm run dev:edge\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cdn",
+    "content-delivery",
+    "caching",
+    "compression",
+    "node.js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/multipart": "^8.1.0",
+    "@fastify/static": "^6.12.0",
+    "@fastify/cors": "^8.5.0",
+    "better-sqlite3": "^9.4.0",
+    "dotenv": "^16.4.1",
+    "mime-types": "^2.1.35",
+    "etag": "^1.8.1",
+    "compression": "^1.7.4",
+    "lru-cache": "^10.2.0",
+    "axios": "^1.6.7",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "concurrently": "^8.2.2"
+  }
+}
