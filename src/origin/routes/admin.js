@@ -1,6 +1,7 @@
-import { listFiles, getFileById, updateFile } from '../../shared/database.js';
+import { listFiles, getFileById, updateFile, deleteFile as deleteFileRecord } from '../../shared/database.js';
 import axios from 'axios';
 import { config } from '../../shared/config.js';
+import { deleteFile as deleteFileStorage } from '../../shared/storage.js';
 
 export default async function adminRoutes(fastify, options) {
     const requireAdminApiKey = async (request, reply) => {
@@ -125,6 +126,38 @@ export default async function adminRoutes(fastify, options) {
         } catch (error) {
             fastify.log.error(error);
             return reply.code(500).send({ error: 'Failed to update file' });
+        }
+    });
+
+    fastify.delete('/files/:id', { preHandler: requireAdminApiKey }, async (request, reply) => {
+        try {
+            const { id } = request.params;
+            const file = getFileById(id);
+
+            if (!file) {
+                return reply.code(404).send({ error: 'File not found' });
+            }
+
+            deleteFileStorage(file.storage_path);
+            deleteFileRecord(id);
+
+            try {
+                const edgeUrl = `http://${config.edge.host}:${config.edge.port}`;
+                await axios.post(`${edgeUrl}/api/purge/${file.id}`, {}, {
+                    timeout: 2000,
+                });
+            } catch (edgeError) {
+                fastify.log.warn('Could not notify edge server:', edgeError.message);
+            }
+
+            return {
+                success: true,
+                message: 'File deleted successfully',
+                fileId: id,
+            };
+        } catch (error) {
+            fastify.log.error(error);
+            return reply.code(500).send({ error: 'Failed to delete file' });
         }
     });
 
